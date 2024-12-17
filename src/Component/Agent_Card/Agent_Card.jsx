@@ -1,9 +1,20 @@
 import React from "react";
 import "./Agent_Card.css";
+import { useNavigate } from "react-router-dom";
+import {jwtDecode} from "jwt-decode"
 
 function Agent_Card({ agent }) {
+	const navigate=useNavigate()
+	function Redirectpage(){
+		let userid=null
+		const Token=localStorage.getItem("Token")
+		if (Token) {
+			 userid=((jwtDecode(Token)).id)
+		}
+		navigate(`/chat/${userid}/${agent._id}`)
+	}
 	return (
-		<div className="Agent_card_parent">
+		<div onClick={Redirectpage} className="Agent_card_parent">
 			<div className="agent_img">
 				<img src={agent.picture} alt={agent.name} />
 			</div>

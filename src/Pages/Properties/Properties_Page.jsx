@@ -5,7 +5,6 @@ import Filter from "../../Component/Filter/Filter";
 // import Properties from "../../Data/Properties.json";
 import PropertyCard from "../../Component/Properties_card/PropertyCard";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
 import {secureinstance} from "../../Interceptor/Interceptor";
 
 function Properties_Page() {

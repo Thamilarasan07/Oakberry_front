@@ -19,9 +19,6 @@ function Home() {
 	const navigate = useNavigate();
 	useEffect(() => {
 		const Token = localStorage.getItem("Token");
-		// if (!Token) {
-		// 	navigate("/login");
-		// }
 	}, [navigate]);
 	const [agentdetails, setagentdetail] = useState([]);
 
@@ -29,7 +26,6 @@ function Home() {
 		const fetchAgent = async () => {
 			try {
 				const response = await secureinstance.get("/auth/getagent");
-				console.log(response.data); // Log the data to verify its structur
 				setagentdetail(response.data); // Set the data from the response
 			} catch (err) {
 				console.log("Error fetching agent details:", err.message);

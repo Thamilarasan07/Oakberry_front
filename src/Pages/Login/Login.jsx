@@ -4,12 +4,14 @@ import Button from "../../Component/Button/Button";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
+
 function Login() {
 	const navigate = useNavigate();
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState(null);
 	const [success, setSuccess] = useState(null);
+	
 
 	const usernameChange = (e) => setUsername(e.target.value);
 	const passwordChange = (e) => setPassword(e.target.value);
@@ -29,9 +31,10 @@ function Login() {
 					password,
 				}
 			);
+			console.log(response.data);
 			localStorage.setItem("Token", response.data.token);
 			localStorage.setItem("RefreshToken", response.data.refreshtoken);
-			navigate("/");
+			navigate(`/?userid=`);
 
 			setSuccess(response.data.message);
 			setError(null);
