@@ -37,7 +37,7 @@ function App() {
 							<Routes>
 								<Route path="/" element={<Home />} />
 								<Route path="/about" element={<About_Page />} />
-								<Route path="/chat/:userid/:receiverid" element={<Chatbox />} />
+								<Route path="/chat/:userid/:receiverid?" element={<Chatbox />} />
 								<Route path="/properties" element={<Properties />} />
 								<Route path="/agent" element={<Agent />} />
 								<Route path="/contact" element={<Contact />} />

@@ -11,87 +11,77 @@ function Chatbox() {
 	const [message, setMessage] = useState(""); // Holds the input message
 	const [newuser, setnewuser] = useState(null);
 	const [chat, setChat] = useState([]);
-	const socket = useRef(null); // Socket instance
+	const socket = useRef(null);
 	useEffect(() => {
-		console.log("running once");
-		const fetchUsers = async () => {
-			try {
-				const response = await fetch(
-					`http://localhost:5555/api/chat/user/${userid}`
+		if (!socket.current) {
+			socket.current = io(`http://localhost:5555/?userid=${userid}`);
+			console.log("Socket connected");
+			socket.current.on("existcontact", (data) => {
+				setUsers(data);
+			});
+			// Emit the joinRoom event whenever the activeChat changes
+			socket.current.on("userOnline", (data) => {
+				setUsers((prevUsers) =>
+					prevUsers.map((user) => ({
+						...user,
+						onlineStatus: data[user.userId]?.online,
+					}))
 				);
-				const data = await response.json();
-				setUsers(data); // Set the list of users
-			} catch (error) {
-				console.error("Error fetching users:", error);
-			}
-		};
-		fetchUsers();
-	}, [newuser]);
-	// Initialize socket connection and set up event listeners
-	useEffect(() => {
-		if (activeChat) {
-			// Disconnect the previous socket connection
-			if (socket.current) {
-				socket.current.disconnect();
-			}
-
-			// Connect to Socket.IO with the selected chat partner
-			socket.current = io(
-				`http://localhost:5555/?userid=${userid}&receiverid=${activeChat}`
-			);
-
-			// Emit the joinRoom event
-			socket.current.emit("joinRoom");
-
-			// Load messages for the room
-			socket.current.on("loadMessages", (messages) => {
-				setChat(messages); // Update chat state
 			});
-
-			// Listen for new messages
-			socket.current.on("newMessage", (data) => {
-				console.log("New message received:", data);
-				if (data.senderId !== userid) {
-					setChat((prevChat) => [
-						...prevChat,
-						{
-							message: data.message,
-							senderId: data.senderId,
-							timestamp: data.timestamp,
-						},
-					]);
-				}
-			});
-
-			// Cleanup on unmount
 			return () => {
 				if (socket.current) {
 					socket.current.disconnect();
+					socket.current = null;
 					console.log("Socket disconnected");
 				}
 			};
 		}
-	}, [activeChat, userid]);
+	}, [userid]);
+	useEffect(() => {
+		if (activeChat) {
+			if (socket.current) {
+				socket.current.emit("joinRoom", activeChat);
+				// Cleanup and leave the room when the activeChat changes
+				socket.current.on("loadMessages", (data) => {
+					setChat(data.messages); // Update chat state
+					console.log(data);
+				});
+				socket.current.on("newMessage", (data) => {
+					console.log("New message received:", data);
+					setChat((prevChat) => [
+						...prevChat,
+						{
+							status: data.status,
+							message: data.message,
+							senderId: data.senderId,
+							timestamp: data.timestamp,
+							lastMessage: data.message,
+						},
+					]);
+				});
+				return () => {
+					if (socket.current)
+						console.log(socket.current.emit("leaveRoom", activeChat));
+				};
+			}
+		}
+	}, [activeChat, newuser]);
 
 	// Function to send a message to the server
 	const sendMessage = () => {
-		console.log(activeChat);
 		if (activeChat && !users.some((user) => user.userId === activeChat)) {
 			setnewuser(activeChat); // Update `newuser`
 		}
 		if (message.trim() && socket.current) {
-			socket.current.emit("message", message); // Send the message to the server
-			setChat((prevChat) => [
-				...prevChat,
-				{ message, senderId: userid, timestamp: new Date() }, // Add the message locally
-			]);
-			setUsers((prevUsers) =>
-				prevUsers.map((user) =>
-					user.userId === activeChat
-						? { ...user, lastMessage: message, updatedAt: new Date() }
-						: user
-				)
-			);
+			socket.current.emit("message", { activeChat, message }); // Send the message to the server
+			setChat((prevChat) => {
+				return prevChat.map((chat) => {
+					if (chat.userId === activeChat) {
+						return { ...chat, lastMessage: message }; // Update the lastMessage for the active chat
+					}
+					return chat; // Return unchanged chat objects
+				});
+			});
 			setMessage(""); // Clear the input field
 		}
 	};
@@ -106,25 +96,26 @@ function Chatbox() {
 
 	return (
 		<div style={{ backgroundColor: "rgb(8, 8, 43)" }} className="parent_chat">
-			<h3>
-				CHAT <i className="fa-light fa-comment-dots fa-sm"></i>
-			</h3>
-			<div style={{ display: "flex", padding: "0 3rem", gap: "5px" }}>
+			<div style={{ display: "flex", padding: "0 5rem", gap: "5px" }}>
 				<div
 					style={{
 						display: "flex",
 						flexDirection: "column",
-						gap: "3px",
+						gap: "6px",
 						width: "25%",
+						background: "rgb(255, 255, 255)",
 						border: "2px solid #ccc",
 						borderRadius: "20px 10px",
-						padding: "6px 4px",
+						padding: "8px 6px",
+						cursor: "default",
 					}}>
 					{users.map((user) => (
 						<div
-							className="chat_person"
+							className={`chat_person ${
+								activeChat === user.userId ? "selected" : ""
+							}`}
 							key={user.userId}
-							onClick={() => setActiveChat(user.userId)}>
+							onClick={(e) => setActiveChat(user.userId)}>
 							<img
 								style={{
 									height: "50px",
@@ -134,14 +125,17 @@ function Chatbox() {
 									objectPosition: "top center",
 								}}
 								src={user.profile}
-								alt="Empty"></img>
+								alt="Empty"
+							/>
 							<div style={{ width: "80%" }}>
-								<p style={{ margin: "0 0 0 5px",fontSize:"14px" }}>{user.name}</p>
+								<p style={{ margin: "0 0 0 5px", fontSize: "14px" }}>
+									{user.name}
+								</p>
 								<div style={{ display: "flex" }}>
 									<p
 										style={{
 											margin: "0 0 0 5px",
-											color:"#777",
+											color: "#777",
 											width: "80%",
 											fontSize: "13px",
 											whiteSpace: "nowrap",
@@ -161,6 +155,13 @@ function Chatbox() {
 										{moment(user.updatedAt).tz("Asia/Kolkata").format("h:mm A")}
 									</p>
 								</div>
+								<div
+									style={{
+										fontSize: "12px",
+										color: user.onlineStatus ? "green" : "gray",
+									}}>
+									{user.onlineStatus ? "Online" : "Offline"}
+								</div>
 							</div>
 						</div>
 					))}
@@ -170,49 +171,83 @@ function Chatbox() {
 						width: "75%",
 						border: "2px solid #ccc",
 						borderRadius: "20px 10px",
-						backgroundColor: "#85929e",
+						backgroundColor: "#fff",
+						height: "85vh",
 					}}>
-					<div
-						style={{
-							padding: "10px",
-							height: "65vh",
-							overflowY: "scroll",
-							display: "flex",
-							flexDirection: "column",
-						}}>
-						{/* Loop through the chat history and display each message */}
-						{chat.map((msg, index) => (
-							<p
-								className={msg.senderId === userid ? "client" : "server"}
-								key={index}>
-								{msg.senderId === userid ? "Client: " : "Server: "}
-								{msg.message}
+					{activeChat ? (
+						<>
+							<div className="chat_shower">
+								{chat.map((msg, index) => (
+									<p
+										className={msg.senderId === userid ? "client" : "server"}
+										key={index}>
+										<span
+											style={{
+												fontSize: "14px",
+												color: "rgb(235, 29, 29)",
+												fontWeight: "600",
+											}}>
+											{users.find((user) => user.userId === msg.senderId)?.name}
+										</span>
+										{msg.message}
+										<div
+											style={{
+												fontSize: "12px",
+												alignSelf: msg.senderId === userid ? "end" : "start",
+												color: msg.senderId === userid ? "#d6d6d6" : "#111",
+											}}>
+											{userid !== msg.receiverId ? (
+												<>
+													{msg.status === "Delivered" ? (
+														<i class="fa-solid fa-check"></i>
+													) : (
+														<i class="fa-solid fa-check-double"></i>
+													)}
+												</>
+											) : null}
+											<span style={{marginLeft:"3px"}}>
+												{moment(msg.Timestamp)
+													.tz("Asia/Kolkata")
+													.format("h:mm A")}
+											</span>
+										</div>
+									</p>
+								))}
+							</div>
+							<div
+								style={{
+									display: "flex",
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "center",
+									boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px",
+									borderRadius: "50px",
+									padding: "0 10px",
+									margin: "1% 8%",
+								}}>
+								<input
+									className="text"
+									type="text"
+									value={message}
+									onChange={(e) => setMessage(e.target.value)}
+									placeholder="Type your message..."
+									onKeyDown={send}
+								/>
+								<button className="sendmessage" onClick={sendMessage}>
+									<i className="fa-sharp-duotone fa-solid fa-paper-plane"></i>
+								</button>
+							</div>
+						</>
+					) : (
+						<div className="chat_shower no_data">
+							<p>
+								<span style={{ fontSize: "1.5rem", marginRight: "10px" }}>
+									👈
+								</span>
+								Click an agent to start a conversation about property details.
 							</p>
-						))}
-					</div>
-					<div
-						style={{
-							display: "flex",
-							flexDirection: "row",
-							alignItems: "center",
-							justifyContent: "center",
-							backgroundColor: "white",
-							borderRadius: "50px",
-							padding: "0 10px",
-							margin: "1% 8%",
-						}}>
-						<input
-							className="text"
-							type="text"
-							value={message}
-							onChange={(e) => setMessage(e.target.value)}
-							placeholder="Type your message..."
-							onKeyDown={send}
-						/>
-						<button className="sendmessage" onClick={sendMessage}>
-							<i className="fa-sharp-duotone fa-solid fa-paper-plane"></i>
-						</button>
-					</div>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

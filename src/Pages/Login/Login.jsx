@@ -34,7 +34,7 @@ function Login() {
 			console.log(response.data);
 			localStorage.setItem("Token", response.data.token);
 			localStorage.setItem("RefreshToken", response.data.refreshtoken);
-			navigate(`/?userid=`);
+			navigate(`/`);
 
 			setSuccess(response.data.message);
 			setError(null);

@@ -34,7 +34,6 @@ function Home() {
 
 		fetchAgent();
 	}, []);
-
 	const size = "10rem";
 	return (
 		<div className="parent-home">
@@ -179,10 +178,10 @@ function Home() {
 							{agentdetails
 								.slice(0, 4)
 								.map((agentdetail, index) =>
-									agentdetail.propertiesCount >= 1 ? (
+									(agentdetail.propertiesCount >= 1 ? (
 										<Agent_Card key={index} agent={agentdetail} />
 									) : null
-								)}
+								))}
 						</div>
 					</div>
 				</div>

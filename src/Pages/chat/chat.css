@@ -3,12 +3,12 @@
 	color: white;
 	text-align: center;
 }
-.chat_person{
+.chat_person {
 	display: flex;
 	width: 100%;
 	align-items: center;
 	border-radius: 10px;
-	background-color: rgb(232, 226, 226);
+	background-color: rgb(255, 255, 255);
 	padding: 4px;
 	font-weight: 400;
 	font-size: 24px;
@@ -18,29 +18,53 @@
 	margin-bottom: 0;
 	text-align: left;
 }
+.chat_person:hover {
+	box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px,
+		rgba(0, 0, 0, 0.37) 0px 0px 0px 1px;
+}
+.chat_shower {
+	padding: 10px;
+	height: 72vh;
+	overflow-y: scroll;
+	color: black;
+	display: flex;
+	flex-direction: column;
+}
+.selected {
+	box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px,
+		rgba(0, 0, 0, 0.37) 0px 0px 0px 1px;
+}
+.no_data {
+	justify-content: center;
+	align-items: center;
+}
 .client {
-	max-width: 40%;
-	padding:10px;
+	max-width: 60%;
 	word-wrap: break-word;
+	display: flex;
+	flex-direction: column;
+	font-size: 1rem;
 	align-self: end;
-	text-align: left;
-	background-color:rgb(29, 153, 235);
-	padding: 8px 16px;
-	border-radius:25px 25px 0px 25px; 
+	text-align: right;
+	background-color: rgb(29, 153, 235);
+	padding: 4px 14px 4px 18px;
+	border-radius: 25px ;
 }
 .server {
-	max-width: 40%;
-	padding:10px;
+	max-width: 60%;
+	display: flex;
+	flex-direction: column;
+	font-size: 1rem;
 	word-wrap: break-word;
-	align-self:flex-start;
+	align-self: flex-start;
 	text-align: left;
-	background-color:rgb(255, 255, 255);
-	padding: 8px;
-	border-radius:25px 25px 25px 0px; 
+	background-color: rgba(137, 145, 146, 0.726);
+	padding: 4px 18px 4px 14px;
+	border-radius: 25px 25px 25px 0px;
 	color: black;
 	font-weight: 500;
 }
-.text{
+.text {
 	width: 100%;
 	height: 30px;
 	margin: 0px 10px;
@@ -48,12 +72,23 @@
 	outline: none;
 	border-right: 2px solid rgb(19, 13, 42);
 }
-.sendmessage{
+.sendmessage {
 	font-size: 1.5rem;
 	border: none;
 	padding: 0.3rem;
-	background:none;
+	background: none;
 }
-.sendmessage i{
+.sendmessage i {
 	color: green;
 }
+/* .fa-sharp-duotone{
+	position: absolute;
+	animation-name: fly;
+}
+
+@keyframes fly {
+	0%{
+		tra: ;
+	}
+	
+} */

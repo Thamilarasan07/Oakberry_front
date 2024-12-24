@@ -21,7 +21,7 @@ const Agent = () => {
 
 		fetchAgent();
 	}, []);
-
+	console.log(agentdetails)
 	return (
 		<div className="parent_agent">
 			<Hero_Section pagename="Our Agents" />
