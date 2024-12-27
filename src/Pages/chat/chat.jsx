@@ -44,6 +44,8 @@ function Chatbox() {
 				// Cleanup and leave the room when the activeChat changes
 				socket.current.on("loadMessages", (data) => {
 					setChat(data.messages); // Update chat state
+				});
+				socket.current.on("userActivityUpdated", (data) => {
 					console.log(data);
 				});
 				socket.current.on("newMessage", (data) => {
@@ -60,12 +62,12 @@ function Chatbox() {
 					]);
 				});
 				return () => {
-					if (socket.current)
-						console.log(socket.current.emit("leaveRoom", activeChat));
+					if (socket.current) socket.current.emit("leaveRoom", activeChat);
 				};
 			}
 		}
-	}, [activeChat, newuser]);
+	}, [activeChat]);
+	console.log(users)
 
 	// Function to send a message to the server
 	const sendMessage = () => {
@@ -96,19 +98,8 @@ function Chatbox() {
 
 	return (
 		<div style={{ backgroundColor: "rgb(8, 8, 43)" }} className="parent_chat">
-			<div style={{ display: "flex", padding: "0 5rem", gap: "5px" }}>
-				<div
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						gap: "6px",
-						width: "25%",
-						background: "rgb(255, 255, 255)",
-						border: "2px solid #ccc",
-						borderRadius: "20px 10px",
-						padding: "8px 6px",
-						cursor: "default",
-					}}>
+			{/* <div style={{ display: "flex", padding: "0 5rem", gap: "5px" }}> */}
+				<div className="person_details_main">
 					{users.map((user) => (
 						<div
 							className={`chat_person ${
@@ -144,36 +135,28 @@ function Chatbox() {
 										}}>
 										{user.lastMessage}
 									</p>
-									<p
-										style={{
-											margin: "0 0 0 5px",
-											fontSize: "10px",
-											alignSelf: "flex-end",
-											justifySelf: "flex-end",
-											width: "20%",
-										}}>
-										{moment(user.updatedAt).tz("Asia/Kolkata").format("h:mm A")}
-									</p>
 								</div>
-								<div
-									style={{
+								<div style={{width:"95%",display:"flex",alignItems:"center",justifyContent:"space-between",margin: "0 0 0 5px",}}>
+									<p style={{
+										margin: "0",
 										fontSize: "12px",
 										color: user.onlineStatus ? "green" : "gray",
 									}}>
 									{user.onlineStatus ? "Online" : "Offline"}
+									</p>
+									<p
+										style={{
+											margin: "0",
+											fontSize: "10px",
+										}}>
+										{moment(user.updatedAt).tz("Asia/Kolkata").format("h:mm A")}
+									</p>
 								</div>
 							</div>
 						</div>
 					))}
 				</div>
-				<div
-					style={{
-						width: "75%",
-						border: "2px solid #ccc",
-						borderRadius: "20px 10px",
-						backgroundColor: "#fff",
-						height: "85vh",
-					}}>
+				<div className="chat_messages_main">
 					{activeChat ? (
 						<>
 							<div className="chat_shower">
@@ -196,7 +179,7 @@ function Chatbox() {
 												alignSelf: msg.senderId === userid ? "end" : "start",
 												color: msg.senderId === userid ? "#d6d6d6" : "#111",
 											}}>
-											{userid !== msg.receiverId ? (
+											{userid === msg.senderId ? (
 												<>
 													{msg.status === "Delivered" ? (
 														<i class="fa-solid fa-check"></i>
@@ -205,7 +188,7 @@ function Chatbox() {
 													)}
 												</>
 											) : null}
-											<span style={{marginLeft:"3px"}}>
+											<span style={{ marginLeft: "3px" }}>
 												{moment(msg.Timestamp)
 													.tz("Asia/Kolkata")
 													.format("h:mm A")}
@@ -249,7 +232,6 @@ function Chatbox() {
 						</div>
 					)}
 				</div>
-			</div>
 		</div>
 	);
 }
